@@ -50,6 +50,7 @@ export default function Gameboard() {
         }
     },[bombsLeft, time]);
 
+// Clock functions
     function startTimer() {
         const id = setInterval(() => {
             setTime((time) => time-1);
@@ -61,6 +62,7 @@ export default function Gameboard() {
         clearInterval(timerRef.current);
     }
 
+    //Button function (so the game works)
 
     function startGame() {
 
@@ -106,6 +108,8 @@ export default function Gameboard() {
         }
     }
 
+    //handels button click
+
     function handleClick() {
         if (!game) {
             startTimer();
@@ -113,6 +117,8 @@ export default function Gameboard() {
         }
         startGame();
     }
+
+    //checks winner
 
     function checkWinner() {
 
@@ -130,6 +136,8 @@ export default function Gameboard() {
 
     }
 
+    //checks if there is a ship in the spot where user clicked
+
     function isThereAShip(number) {
 
        if (ships.includes(number)) {
@@ -139,6 +147,8 @@ export default function Gameboard() {
            return(false);
        }
     }
+
+    //decides if its miss or hit
 
     function isMiss(number) {
 
@@ -160,6 +170,8 @@ export default function Gameboard() {
         }
     }
 
+    //draws on item to the clicked spot
+
     function drawItem(number) {
 
         if (status !== 'Game is on...' && status !== 'Keep on bombing!') {
@@ -173,6 +185,8 @@ export default function Gameboard() {
             }
         }
     }
+
+    //chooses color of the item
 
     function chooseItemColor(number) {
         if(board[number] === MISS) {
