@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Text, View, Pressable } from 'react-native';
 import Entypo from '@expo/vector-icons/Entypo';
 import styles from '../style/style';
+import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
 
 const START = 'plus';
 const MISS = 'cross';
@@ -19,7 +20,7 @@ let initialBoard = [
     START, START, START, START, START
 ];
 
-let seconds = 2;
+let seconds = 0;
 
 export default function Gameboard() {
 
@@ -30,43 +31,48 @@ export default function Gameboard() {
     const [bombsLeft, setBombsLeft] = useState(BOMBS_LEFT);
     const [hits, setHits] = useState(0);
     const [status, setStatus] = useState('');
-    const [button, setButton] = useState('Start Game');
+    //const [button, setButton] = useState('Start Game');
+    const [time, setTime] = useState(30);
+    const [game, setGame] = useState(false);
     const timerRef = useRef();
-    const [time, setTime] = useState(seconds);
 
     useEffect(() => {
         checkWinner();
-        if (bombsLeft === BOMBS_LEFT) {
+        if (!game) {
             setStatus('Game has not started');
         }        
         if (hits < 0) {
             setBombsLeft(BOMBS_LEFT-1);
             setHits(0);
         }
-    },[bombsLeft]);
-
-
-
-    useEffect(() => {
-        if(time === 0){
+        if (time === 0) {
             stop();
-            return;
-            
         }
-        checkTime();
-    }, []);
+    },[bombsLeft, time]);
+
+    function startTimer() {
+        const id = setInterval(() => {
+            setTime((time) => time-1);
+        }, 1000);
+        timerRef.current = id;
+    }
+
+    function stop() {
+        clearInterval(timerRef.current);
+    }
 
 
     function startGame() {
 
-        if (status === 'You won, game over!' || status === 'Game over. Ships remaining.' || bombsLeft !== BOMBS_LEFT || time === 0) {
-            stop();
+        if (status === 'You won, game over!' || status === 'Game over. Ships remaining.' || bombsLeft !== BOMBS_LEFT || time !== 30) {
+            setGame(false);
             setShips([]);
             setHits(0);
+            setTime(30);
             setBombsLeft(BOMBS_LEFT);
             setMiss(true);
             setNumShips(3);
-            setButton('Start Game');
+            //setButton('Start Game');
             initialBoard = [
                 START, START, START, START, START,
                 START, START, START, START, START,
@@ -78,10 +84,8 @@ export default function Gameboard() {
             
         }
         else {
-
             setStatus('Game is on...');
-            setButton('New Game');
-            start();
+            //setButton('New Game');
             for (let i = 0; i < NBR_OF_SHIPS; i++) {
                 let n =  Math.floor(Math.random() * 24) + 0;
                 let check = ships.includes(n);
@@ -102,41 +106,28 @@ export default function Gameboard() {
         }
     }
 
-    function start() {
-        const id = setInterval(() => {
-            setTime(seconds--);
-        },1000) 
-    }
-
-    function stop() {
-        clearInterval();
-        setTime(0);
-        return;
+    function handleClick() {
+        if (!game) {
+            startTimer();
+            setGame(true);
+        }
+        startGame();
     }
 
     function checkWinner() {
 
-        if (hits >= WINNING_POINTS && bombsLeft > 0) {
+        if (hits >= WINNING_POINTS && bombsLeft === 0) {
             setStatus('You won!');
             stop();
-
         }
         else if (hits !== NBR_OF_SHIPS && bombsLeft === 0) {
             setStatus('Game over. Ships remaining.');
             stop();
-        }
-        else {
-            setStatus('Keep on bombing!');
-        }
-
-    }
-
-    function checkTime() {
-
-        if (seconds === 0 ) {
-            //setStatus('Timeout! Ships remaining.');
+        } else if (time === 0) {
+            setStatus('Timeout! Ships remaining.')
             stop();
         }
+
     }
 
     function isThereAShip(number) {
@@ -151,19 +142,21 @@ export default function Gameboard() {
 
     function isMiss(number) {
 
+        setStatus('Keep on bombing!');
+
         if (isThereAShip(number) === true) {
             board[number] = HIT;
             setMiss();
             setHits(hits+1);
             setBombsLeft(bombsLeft-1);
             setNumShips(numShips-1);
-            checkWinner();
+            checkWinner(number);
         }
         else {
             board[number] = MISS;
             setMiss(!miss);
             setBombsLeft(bombsLeft-1);
-            checkWinner();
+            checkWinner(number);
         }
     }
 
@@ -195,7 +188,6 @@ export default function Gameboard() {
 
     function winGame() {
         if (ships === 0) {
-            stop();
             return setStatus('You sinked all ships!');
         }
         else {
@@ -291,14 +283,14 @@ export default function Gameboard() {
                 </Pressable>
             </View>
             <View style={styles.view}>
-            <Pressable style={styles.button} onPress={() => startGame()}>
-                <Text style={styles.buttonText}>{button}</Text>
+            <Pressable style={styles.button} onPress={() => handleClick()}>
+                <Text style={styles.buttonText}>{game ? 'New Game' : 'Start Game'}</Text>
             </Pressable>
             <Text style={styles.gameinfo}>Hits: {hits}</Text>
             <Text style={styles.gameinfo}>Bombs: {bombsLeft}</Text>
             <Text style={styles.gameinfo}>Ships: {numShips}</Text>
             </View>
-            <Text style={styles.gameinfo}>Time: {time} secs</Text>
+            <Text style={styles.gameinfo}>Time: {time} sec</Text>
             <Text style={styles.gameinfo}>Status: {status}</Text>
         </View>
     )
