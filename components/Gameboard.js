@@ -20,8 +20,6 @@ let initialBoard = [
     START, START, START, START, START
 ];
 
-let seconds = 0;
-
 export default function Gameboard() {
 
     const [miss, setMiss] = useState(true);
